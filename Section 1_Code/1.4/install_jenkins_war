@@ -1,0 +1,7 @@
+yum -y install java-1.8.0-openjdk tomcat
+
+cd /usr/share/tomcat/webapps/
+
+wget http://ftp-nyc.osuosl.org/pub/jenkins/war-stable/2.89.3/jenkins.war
+
+systemctl start tomcat

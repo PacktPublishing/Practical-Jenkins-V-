@@ -1,0 +1,15 @@
+curl -u admin:20fda2a6ed2ff7a8cf9db9dd50a0c2b0 "http://localhost:8080/api/json?pretty=true"
+
+curl -s 'http://localhost:8080/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)' -u admin:admin
+
+curl -X POST -u admin:20fda2a6ed2ff7a8cf9db9dd50a0c2b0 "http://localhost:8080/job/python-job/build" -H "Jenkins-Crumb:f40b9f1084de9e60cca87085b30e6159"
+
+wget --auth-no-challenge "http://localhost:8080/jnlpJars/jenkins-cli.jar"
+
+java -jar jenkins-cli.jar -auth admin:20fda2a6ed2ff7a8cf9db9dd50a0c2b0 -s http://localhost:8080 help
+
+java -jar jenkins-cli.jar -auth admin:20fda2a6ed2ff7a8cf9db9dd50a0c2b0 -s http://localhost:8080 install-plugin aws-codebuild -deploy
+
+java -jar jenkins-cli.jar -auth admin:20fda2a6ed2ff7a8cf9db9dd50a0c2b0 -s http://localhost:8080 install-plugin http://updates.jenkins-ci.org/latest/ansicolor.hpi -deploy
+
+java -jar jenkins-cli.jar -auth admin:20fda2a6ed2ff7a8cf9db9dd50a0c2b0 -s http://localhost:8080 install-plugin http://updates.jenkins-ci.org/download/plugins/beaker-builder/1.6/beaker-builder.hpi -deploy

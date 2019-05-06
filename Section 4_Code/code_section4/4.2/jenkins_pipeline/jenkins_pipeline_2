@@ -1,0 +1,16 @@
+pipeline {
+
+  agent {
+    node {
+      label 'docker-jenkins'
+    }
+  }
+
+  options {
+    timestamps()
+  }
+
+  environment {
+    CC = 'clang'
+  }
+}

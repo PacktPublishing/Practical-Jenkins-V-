@@ -1,0 +1,11 @@
+yum install -y yum-utils device-mapper-persistent-data lvm2
+
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+yum -y install docker-ce
+
+systemctl start docker
+
+docker run --name jenkins_master_2 -d -p 8080:8080 -v jenkins_home:/var/jenkins_home jenkins/jenkins:lts
+
+docker run --name jenkins_master -p 8080:8080 -v jenkins_home:/var/jenkins_home jenkins/jenkins:lts

@@ -1,0 +1,23 @@
+pipeline {
+  stages {
+    stage('Checkout') {
+      steps {
+          checkout scm
+      }
+    }
+    stage('Build') {
+      parallel {
+        stage ('First Test') {
+          steps {
+            echo 'Run First Test here...'
+          }
+        }
+        stage('Second Test') {
+          steps {
+            echo 'Run Second Test here...'
+          }
+        }
+      }
+    }
+  }
+}

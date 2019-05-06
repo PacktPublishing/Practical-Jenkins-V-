@@ -1,0 +1,88 @@
+yum -y install openldap-servers openldap-clients
+cp /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG
+chown ldap. /var/lib/ldap/DB_CONFIG
+systemctl start slapd
+
+slappasswd -> Enter new password twice -> GENERATED_PASSWORD
+
+#New file
+config.ldif
+
+#Add content
+dn: olcDatabase={0}config,cn=config
+changetype: modify
+add: olcRootPW
+olcRootPW: GENERATED_PASSWORD
+
+#Run commands
+ldapadd -Y EXTERNAL -H ldapi:/// -f config.ldif
+ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/cosine.ldif
+ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/nis.ldif
+ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/inetorgperson.ldif
+
+#New file
+domain.ldif
+
+#Add content
+dn: olcDatabase={1}monitor,cn=config
+changetype: modify
+replace: olcAccess
+olcAccess: {0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth"
+  read by dn.base="cn=Manager,dc=practicaljenkins,dc=com" read by * none
+
+dn: olcDatabase={2}hdb,cn=config
+changetype: modify
+replace: olcSuffix
+olcSuffix: dc=practicaljenkins,dc=com
+
+dn: olcDatabase={2}hdb,cn=config
+changetype: modify
+replace: olcRootDN
+olcRootDN: cn=Manager,dc=practicaljenkins,dc=com
+
+dn: olcDatabase={2}hdb,cn=config
+changetype: modify
+add: olcRootPW
+olcRootPW: {SSHA}mviTD7um1R+LygfAN01MzQOtK4ezm1ob
+
+dn: olcDatabase={2}hdb,cn=config
+changetype: modify
+add: olcAccess
+olcAccess: {0}to attrs=userPassword,shadowLastChange by
+  dn="cn=Manager,dc=practicaljenkins,dc=com" write by anonymous auth by self write by * none
+olcAccess: {1}to dn.base="" by * read
+olcAccess: {2}to * by dn="cn=Manager,dc=practicaljenkins,dc=com" write by * read
+
+
+#Run command
+ldapmodify -Y EXTERNAL -H ldapi:/// -f domain.ldif
+
+systemctl restart slapd
+
+#New file
+base.ldif
+
+#Add content
+dn: dc=practicaljenkins,dc=com
+objectClass: top
+objectClass: dcObject
+objectclass: organization
+o: practicaljenkins
+dc: practicaljenkins
+
+dn: cn=Manager,dc=practicaljenkins,dc=com
+objectClass: organizationalRole
+cn: Manager
+description: Directory Manager
+
+dn: ou=users,dc=practicaljenkins,dc=com
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=groups,dc=practicaljenkins,dc=com
+objectClass: organizationalUnit
+ou: groups
+
+#Run command - enter password of slappasswd command when asked
+
+ldapadd -x -D cn=Manager,dc=practicaljenkins,dc=com -W -f base.ldif

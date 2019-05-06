@@ -1,0 +1,23 @@
+defaults
+  log  global
+  maxconn  2000
+  mode  http
+  option  redispatch
+  option  forwardfor
+  option  http-server-close
+  retries  3
+  timeout  http-request 10s
+  timeout  queue 1m
+  timeout  connect 10s
+  timeout  client 1m
+  timeout  server 1m
+  timeout  check 10s
+
+frontend ft_jenkins
+  bind *:80
+  default_backend  bk_jenkins
+  reqadd  X-Forwarded-Proto:\ http
+
+backend bk_jenkins
+  server jenkins1 172.31.45.33:8080 check
+  server jenkins2 172.31.33.85:8080 check backup

@@ -1,0 +1,30 @@
+check system $HOST
+    if loadavg (5min) > 3 then alert
+    if loadavg (15min) > 1 then alert
+    if memory usage > 80% for 4 cycles then alert
+    if swap usage > 20% for 4 cycles then alert
+    if cpu usage (user) > 80% for 2 cycles then alert
+    if cpu usage (system) > 20% for 2 cycles then alert
+    if cpu usage (wait) > 80% for 2 cycles then alert
+    if cpu usage > 200% for 4 cycles then alert
+
+check process jenkins with pidfile /var/run/jenkins.pid
+    start program = "/bin/systemctl start jenkins"
+    stop program  = "/bin/systemctl stop jenkins"
+    if failed host 192.168.33.200 port 8080 then restart
+
+check process nginx with pidfile /var/run/nginx.pid
+    start program = "/bin/systemctl start nginx"
+    stop program  = "/bin/systemctl stop nginx"
+    if failed host 192.168.33.200 port 80 then restart
+
+check filesystem jenkins_mount with path /dev/sda2
+    start program  = "/bin/mount /var/lib/jenkins"
+    stop program  = "/bin/umount /var/lib/jenkins"
+    if space usage > 80% for 3 times within 5 cycles then alert
+    if space usage > 99% then stop
+    if inode usage > 30000 then alert
+    if inode usage > 99% then stop
+
+check directory jenkins_home with path /var/lib/jenkins
+    if failed permission 755 then exec "/bin/chmod 755 /var/lib/jenkins"

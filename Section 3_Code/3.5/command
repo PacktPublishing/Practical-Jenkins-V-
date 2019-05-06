@@ -1,0 +1,1 @@
+openssl pkcs12 -export -out cert.pfx -inkey client.key -in client.crt -certfile ca.crt

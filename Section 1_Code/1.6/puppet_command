@@ -1,0 +1,5 @@
+rpm -ihv http://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm
+
+yum -y install puppet-agent
+
+puppet apply --modulepath ./modules manifests/site.pp

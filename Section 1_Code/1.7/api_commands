@@ -1,0 +1,5 @@
+curl -s 'http://localhost:8080/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)' -u admin:admin
+
+curl -s -XPOST 'http://localhost:8080/createItem?name=python-project-new' -u admin:admin --data-binary @config.xml -H "Jenkins-Crumb:384576fea44a8984fd1afe2474c8e951" -H "Content-Type:text/xml"
+
+curl -s -XPOST 'http://localhost:8080/reload' -u admin:admin -H "Jenkins-Crumb:aacc27914e1ef26b82e8930ec44ce944"

@@ -1,0 +1,91 @@
+#Install EPEL repo
+rpm -ihv https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-7-11.noarch.rpm
+
+#Install Graphite and dependencies
+yum -y install graphite-web mysql mariadb-server MySQL-python net-tools mlocate wget python-carbon python-pip gcc python-devel libffi python-cffi cairo cairo-devel fontconfig freetype*
+
+#Start database server
+systemctl start mariadb
+
+#Configure database and perms
+mysql -e "CREATE DATABASE graphite;"
+mysql -e "GRANT ALL PRIVILEGES ON graphite.* TO 'graphite'@'localhost' IDENTIFIED BY 'j3nk1nsdb';"
+mysql -e 'FLUSH PRIVILEGES;'
+
+#Edit file
+vi /etc/graphite-web/local_settings.py
+
+#Add content
+DATABASES = {
+    'default': {
+        'NAME': 'graphite',
+        'ENGINE': 'django.db.backends.mysql',
+        'USER': 'graphite',
+        'PASSWORD': 'j3nk1nsdb',
+        'HOST': 'localhost',
+        'PORT': '3306'
+    }
+}
+
+#Change perms
+chown -R apache:apache /var/lib/graphite-web /usr/share/graphite/
+
+#Edit file
+vi /etc/httpd/conf.d/graphite-web.conf
+
+#Add content
+
+<VirtualHost *:80>
+    ServerName graphite-web
+    DocumentRoot "/usr/share/graphite/webapp"
+    ErrorLog /var/log/httpd/graphite-web-error.log
+    CustomLog /var/log/httpd/graphite-web-access.log common
+
+    # Header set Access-Control-Allow-Origin "*"
+    # Header set Access-Control-Allow-Methods "GET, OPTIONS"
+    # Header set Access-Control-Allow-Headers "origin, authorization, accept"
+    # Header set Access-Control-Allow-Credentials true
+
+    WSGIScriptAlias / /usr/share/graphite/graphite-web.wsgi
+    WSGIImportScript /usr/share/graphite/graphite-web.wsgi process-group=%{GLOBAL} application-group=%{GLOBAL}
+
+    <Location "/content/">
+        SetHandler None
+    </Location>
+
+    Alias /media/ "/usr/lib/python2.7/site-packages/django/contrib/admin/media/"
+    <Location "/media/">
+        SetHandler None
+    </Location>
+
+   <Directory "/usr/share/graphite/">
+    Require all granted
+    Order allow,deny
+    Allow from all
+   </Directory>
+</VirtualHost>
+
+#Run command
+/usr/lib/python2.7/site-packages/graphite/manage.py syncdb
+
+#Edit file
+vi /etc/yum.repos.d/grafana.repo
+
+#Add content
+[grafana]
+name=grafana
+baseurl=https://packagecloud.io/grafana/stable/el/6/$basearch
+repo_gpgcheck=1
+enabled=1
+gpgcheck=1
+gpgkey=https://packagecloud.io/gpg.key https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+
+#Install grafana
+yum -y install grafana
+
+#Start services
+systemctl start carbon-cache
+systemctl start httpd
+systemctl start grafana-server
